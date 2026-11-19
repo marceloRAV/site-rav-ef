@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel do Professor — RAV EF</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #e0f2f1; color: #1a2e2b; padding-bottom: 40px; }
+    header { background: #00695c; color: white; padding: 20px; text-align: center; }
+    header h1 { font-size: 1.5rem; }
+    #painel { max-width: 1100px; margin: 20px auto; padding: 0 16px; }
+    .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    h2 { color: #00695c; font-size: 1.1rem; margin-bottom: 12px; }
+    .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .kpi { background: #00695c; color: white; padding: 16px; border-radius: 12px; text-align: center; }
+    .kpi .valor { font-size: 1.8rem; font-weight: 800; }
+    .kpi .rotulo { font-size: .8rem; text-transform: uppercase; }
+    .kpi.alerta { background: #c62828; }
+    .kpi.ok { background: #2e7d32; }
+    .acoes { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+    .acoes button { padding: 10px 16px; background: #00695c; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    .acoes button.pdf { background: #c62828; }
+    .acoes button.sec { background: #546e7a; }
+    #filtro { padding: 8px 12px; border-radius: 8px; border: 2px solid #b2dfdb; width: 100%; max-width: 300px; font-size: 1rem; margin-bottom: 12px; }
+    .graficos { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .graficos .full { grid-column: 1 / -1; }
+    .grafico-box { position: relative; height: 280px; width: 100%; }
+    table { width: 100%; border-collapse: collapse; font-size: .9rem; margin-top: 10px; }
+    th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eceff1; }
+    th { background: #00695c; color: white; }
+    .pct.ok { color: #2e7d32; font-weight: bold; }
+    .pct.mid { color: #f57c00; font-weight: bold; }
+    .pct.bad { color: #c62828; font-weight: bold; }
+    .empty { text-align: center; color: #78909c; padding: 40px 0; }
+    @media (max-width: 700px) { .graficos { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📊 Painel do Professor</h1>
+    <p>Devolutiva RAV Educação Física</p>
+  </header>
+  <div id="painel">
+    <div class="card">
+      <div class="acoes">
+        <button class="pdf" onclick="gerarPDF()">📄 Gerar PDF</button>
+        <button class="sec" onclick="exportarJSON()">📥 Backup (JSON)</button>
+        <button class="sec" onclick="document.getElementById('import').click()">📤 Restaurar</button>
+        <input type="file" id="import" accept=".json" style="display:none" onchange="importarJSON(event)">
+        <button class="sec" onclick="location.href='index.html'">← Voltar ao site</button>
+      </div>
+      <input id="filtro" placeholder="🔍 Filtrar aluno...">
+      <div class="kpis" id="kpis"></div>
+    </div>
+
+    <div class="graficos">
+      <div class="card">
+        <h2>Aproveitamento Geral</h2>
+        <div class="grafico-box"><canvas id="chart-geral"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>% de Acerto por Aluno</h2>
+        <div class="grafico-box"><canvas id="chart-alunos"></canvas></div>
+      </div>
+      <div class="card full">
+        <h2>Desempenho por Habilidade</h2>
+        <div class="grafico-box"><canvas id="chart-habs"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Detalhamento</h2>
+      <div id="tabela"></div>
+    </div>
+  </div>
+
+  <script>
+    const KEY = "rav-progresso";
+    let charts = {};
+
+    function getDados() { return JSON.parse(localStorage.getItem(KEY) || "{}"); }
+    function pct(a, t) { return t === 0 ? 0 : Math.round(a / t * 100); }
+    function corPct(p) { return p >= 70 ? "#43a047" : p >= 50 ? "#fb8c00" : "#e53935"; }
+
+    function render() {
+      const dados = getDados();
+      const filtro = document.getElementById("filtro").value.toLowerCase();
+      const alunos = Object.keys(dados).filter(a => a.toLowerCase().includes(filtro));
+
+      if (alunos.length === 0) {
+        document.getElementById("kpis").innerHTML = '<p class="empty" style="grid-column:1/-1">Nenhum dado registrado. Peça aos alunos para jogar.</p>';
+        document.getElementById("tabela").innerHTML = "";
+        Object.values(charts).forEach(c => c.destroy());
+        return;
+      }
+
+      let acT = 0, ttT = 0;
+      alunos.forEach(a => dados[a].jogos.forEach(j => { acT += j.acertos; ttT += j.total; }));
+      const pGeral = pct(acT, ttT);
+
+      document.getElementById("kpis").innerHTML = `
+        <div class="kpi ${pGeral >= 70 ? "ok" : ""}"><div class="valor">${pGeral}%</div><div class="rotulo">Geral</div></div>
+        <div class="kpi"><div class="valor">${alunos.length}</div><div class="rotulo">Alunos</div></div>
+        <div class="kpi"><div class="valor">${acT}/${ttT}</div><div class="rotulo">Acertos</div></div>
+      `;
+
+      const labelsA = alunos;
+      const dadosA = alunos.map(a => pct(dados[a].jogos.reduce((s,j)=>s+j.acertos,0), dados[a].jogos.reduce((s,j)=>s+j.total,0)));
+
+      if (charts.geral) charts.geral.destroy();
+      charts.geral = new Chart(document.getElementById("chart-geral"), {
+        type: "doughnut",
+        data: { labels: ["Acertos", "Erros"], datasets: [{ data: [acT, ttT-acT], backgroundColor: ["#43a047", "#e53935"] }] },
+        options: { responsive: true, maintainAspectRatio: false, cutout: "65%" }
+      });
+
+      if (charts.alunos) charts.alunos.destroy();
+      charts.alunos = new Chart(document.getElementById("chart-alunos"), {
+        type: "bar",
+        data: { labels: labelsA, datasets: [{ label: "% Acerto", data: dadosA, backgroundColor: dadosA.map(corPct) }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { max: 100 } } }
+      });
+
+      const agg = {};
+      alunos.forEach(a => Object.entries(dados[a].habs || {}).forEach(([h, v]) => {
+        if (!agg[h]) agg[h] = { ac: 0, tt: 0 };
+        agg[h].ac += v.acertos; agg[h].tt += v.total;
+      }));
+      const labelsH = Object.keys(agg);
+      const dadosH = labelsH.map(h => pct(agg[h].ac, agg[h].tt));
+
+      if (charts.habs) charts.habs.destroy();
+      charts.habs = new Chart(document.getElementById("chart-habs"), {
+        type: "bar",
+        data: { labels: labelsH, datasets: [{ label: "% Acerto", data: dadosH, backgroundColor: dadosH.map(corPct) }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { max: 100 } } }
+      });
+
+      let html = `<table><tr><th>Aluno</th><th>Jogos</th><th>Acertos</th><th>%</th></tr>`;
+      alunos.forEach(a => {
+        const ac = dados[a].jogos.reduce((s,j)=>s+j.acertos,0);
+        const tt = dados[a].jogos.reduce((s,j)=>s+j.total,0);
+        const p = pct(ac, tt);
+        html += `<tr><td><strong>${a}</strong></td><td>${dados[a].jogos.length}</td><td>${ac}/${tt}</td><td class="pct ${p>=70?'ok':p>=50?'mid':'bad'}">${p}%</td></tr>`;
+      });
+      html += `</table>`;
+      document.getElementById("tabela").innerHTML = html;
+    }
+
+    function gerarPDF() {
+      if (typeof html2pdf === "undefined") return alert("Aguarde 2 segundos e tente novamente.");
+      const container = document.getElementById("painel").cloneNode(true);
+      container.querySelector(".acoes").remove();
+      container.querySelector("#filtro").remove();
+      
+      const canvases = container.querySelectorAll("canvas");
+      canvases.forEach(c => {
+        const img = document.createElement("img");
+        const originalCanvas = document.getElementById(c.id);
+        if (originalCanvas) {
+          img.src = originalCanvas.toDataURL();
+          img.style.width = "100%";
+          c.parentNode.replaceChild(img, c);
+        }
+      });
+
+      document.body.appendChild(container);
+      container.style.position = "fixed";
+      container.style.left = "-9999px";
+      container.style.width = "800px";
+      container.style.background = "white";
+      container.style.padding = "20px";
+
+      html2pdf().set({
+        margin: 10, filename: 'RAV-EF-Relatorio.pdf',
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      }).from(container).save().then(() => {
+        document.body.removeChild(container);
+      });
+    }
+
+    function exportarJSON() {
+      const blob = new Blob([JSON.stringify(getDados(), null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `backup-rav-${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+    }
+
+    function importarJSON(e) {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        try {
+          const novo = JSON.parse(ev.target.result);
+          const atual = getDados();
+          Object.keys(novo).forEach(a => {
+            if (!atual[a]) atual[a] = { jogos: [], habs: {} };
+            atual[a].jogos.push(...novo[a].jogos);
+            Object.entries(novo[a].habs || {}).forEach(([h, v]) => {
+              if (!atual[a].habs[h]) atual[a].habs[h] = { acertos: 0, total: 0 };
+              atual[a].habs[h].acertos += v.acertos;
+              atual[a].habs[h].total += v.total;
+            });
+          });
+          localStorage.setItem(KEY, JSON.stringify(atual));
+          alert("Dados importados!"); render();
+        } catch { alert("Arquivo inválido."); }
+      };
+      reader.readAsText(e.target.files[0]);
+    }
+
+    document.getElementById("filtro").addEventListener("input", render);
+    window.addEventListener("DOMContentLoaded", render);
+  </script>
+</body>
+</html>
