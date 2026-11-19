@@ -1,0 +1,242 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #e0f2f1 0%, #e3f2fd 100%);
+  min-height: 100vh;
+  color: #1a2e2b;
+  padding-bottom: 40px;
+}
+
+header {
+  background: #00695c;
+  color: white;
+  padding: 24px 20px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,.15);
+}
+header h1 { font-size: 1.6rem; margin-bottom: 4px; }
+header p { opacity: .9; font-size: .95rem; }
+
+#navegacao {
+  max-width: 960px;
+  margin: 20px auto;
+  padding: 0 16px;
+  display: grid;
+  gap: 16px;
+}
+
+.seletor {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.08);
+}
+.seletor h2 { font-size: 1rem; color: #00695c; margin-bottom: 10px; }
+
+.botoes { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.botoes button {
+  padding: 10px 16px;
+  border: 2px solid #00695c;
+  background: white;
+  color: #00695c;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: .95rem;
+  font-weight: 600;
+  transition: all .2s;
+}
+.botoes button:hover { background: #e0f2f1; }
+.botoes button.ativo { background: #00695c; color: white; }
+
+#lista-habilidades { list-style: none; font-size: .9rem; }
+#lista-habilidades li {
+  padding: 6px 10px;
+  background: #f1f8e9;
+  border-left: 4px solid #558b2f;
+  margin-bottom: 6px;
+  border-radius: 4px;
+}
+#lista-habilidades strong { color: #33691e; }
+
+#area-jogo {
+  max-width: 760px;
+  margin: 20px auto;
+  padding: 24px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.1);
+  min-height: 300px;
+}
+
+.placeholder { text-align: center; color: #78909c; padding: 40px 0; }
+
+/* Quiz */
+.quiz-pergunta { font-size: 1.1rem; font-weight: 600; margin-bottom: 16px; color: #00695c; }
+.quiz-opcoes { display: flex; flex-direction: column; gap: 10px; }
+.quiz-opcoes button {
+  padding: 14px;
+  border: 2px solid #b2dfdb;
+  background: #f9fbe7;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 1rem;
+  text-align: left;
+  transition: all .2s;
+}
+.quiz-opcoes button:hover:not(:disabled) { background: #c8e6c9; }
+.quiz-opcoes button.correta { background: #a5d6a7; border-color: #2e7d32; }
+.quiz-opcoes button.errada { background: #ef9a9a; border-color: #c62828; }
+.quiz-opcoes button:disabled { cursor: default; }
+
+.feedback {
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  background: #e3f2fd;
+  color: #0d47a1;
+}
+.feedback.ok { background: #e8f5e9; color: #1b5e20; }
+.feedback.erro { background: #ffebee; color: #b71c1c; }
+
+.acoes { margin-top: 16px; display: flex; gap: 10px; justify-content: space-between; align-items: center; }
+.btn-principal {
+  padding: 12px 20px;
+  background: #00695c;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+}
+.btn-principal:disabled { background: #b0bec5; cursor: not-allowed; }
+.progresso { font-size: .9rem; color: #546e7a; }
+
+/* Memória */
+.memoria-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin: 16px 0;
+}
+@media (max-width: 480px) { .memoria-grid { grid-template-columns: repeat(2, 1fr); } }
+.card-memoria {
+  aspect-ratio: 1;
+  background: #00695c;
+  color: white;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: .85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 6px;
+  transition: all .2s;
+  user-select: none;
+}
+.card-memoria.revelada { background: #f1f8e9; color: #1b5e20; border: 2px solid #81c784; }
+.card-memoria.encontrada { background: #a5d6a7; color: #1b5e20; cursor: default; border: 2px solid #2e7d32; }
+
+/* Classificação */
+.classif-itens { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+.classif-item {
+  padding: 12px 16px;
+  background: #bbdefb;
+  border: 2px solid #64b5f6;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.classif-item.selecionado { background: #1565c0; color: white; }
+.classif-item.feito { background: #c8e6c9; border-color: #66bb6a; opacity: .6; cursor: default; text-decoration: line-through; }
+
+.classif-categorias { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+.classif-cat {
+  padding: 24px 12px;
+  background: #e8f5e9;
+  border: 2px dashed #66bb6a;
+  border-radius: 10px;
+  text-align: center;
+  font-weight: 700;
+  color: #2e7d32;
+  cursor: pointer;
+}
+.classif-cat:hover { background: #c8e6c9; }
+
+/* Simulação */
+.sim-situacao {
+  background: #fff3e0;
+  border-left: 4px solid #ef6c00;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-weight: 600;
+  color: #e65100;
+}
+.sim-opcoes { display: flex; flex-direction: column; gap: 10px; }
+.sim-opcoes button {
+  padding: 14px;
+  border: 2px solid #ffcc80;
+  background: #fff8e1;
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 1rem;
+}
+.sim-opcoes button:hover:not(:disabled) { background: #ffe0b2; }
+.sim-opcoes button.correta { background: #a5d6a7; border-color: #2e7d32; }
+.sim-opcoes button.errada { background: #ef9a9a; border-color: #c62828; }
+.sim-opcoes button:disabled { cursor: default; }
+
+/* Trilha */
+.trilha-board {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.casa {
+  aspect-ratio: 1;
+  background: #eceff1;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #78909c;
+  font-size: 1rem;
+}
+.casa.atual { background: #ffb300; color: white; transform: scale(1.1); box-shadow: 0 0 0 3px #ffca28; }
+.casa.concluida { background: #66bb6a; color: white; }
+
+/* Fim */
+.fim-jogo { text-align: center; padding: 20px; }
+.fim-jogo h2 { color: #00695c; margin-bottom: 12px; }
+.fim-jogo .pontuacao { font-size: 2rem; color: #ff6f00; font-weight: 800; margin: 12px 0; }
+
+/* Caça-palavras */
+.cp-palavras { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.cp-tag { padding: 4px 10px; background: #eceff1; border-radius: 12px; font-size: .8rem; font-weight: 600; color: #455a64; }
+.cp-tag.ok { background: #a5d6a7; color: #1b5e20; text-decoration: line-through; }
+.cp-grid { display: grid; gap: 4px; max-width: 500px; margin: 0 auto; }
+.cp-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+  background: #f1f8e9; border: 1px solid #c8e6c9; border-radius: 6px;
+  cursor: pointer; font-weight: 600; user-select: none; font-size: .9rem; transition: .15s; }
+.cp-cell:hover { background: #c8e6c9; }
+.cp-cell.sel { background: #ffca28; color: #1a2e2b; }
+.cp-cell.achada { background: #66bb6a; color: white; }
+
+/* Completar frases */
+.completar-frase { font-size: 1.15rem; line-height: 1.6; margin-bottom: 16px; color: #1a2e2b; }
+.completar-frase .blank { color: #00695c; font-weight: 800; border-bottom: 3px solid #ffca28; padding: 0 6px; }
+.completar-ops { display: flex; flex-wrap: wrap; gap: 8px; }
+.completar-ops button { padding: 12px 18px; border: 2px solid #b2dfdb; background: #f9fbe7;
+  border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1rem; }
+.completar-ops button:hover:not(:disabled) { background: #c8e6c9; }
+.completar-ops button.correta { background: #a5d6a7; border-color: #2e7d32; }
+.completar-ops button.errada { background: #ef9a9a; border-color: #c62828; }
