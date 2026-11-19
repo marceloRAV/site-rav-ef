@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RAV Educação Física - Jogos</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>🎯 RAV Educação Física</h1>
+    <p>Recuperar para Avançar • 4º Bimestre</p>
+  </header>
+
+  <nav id="navegacao">
+    <section class="seletor">
+      <h2>1. Escolha o ano</h2>
+      <div id="anos" class="botoes"></div>
+    </section>
+    <section class="seletor">
+      <h2>2. Escolha o jogo</h2>
+      <div id="jogos" class="botoes"></div>
+    </section>
+    <section class="seletor" id="habilidades-box">
+      <h2>Habilidades trabalhadas</h2>
+      <ul id="lista-habilidades"></ul>
+    </section>
+  </nav>
+
+  <main id="area-jogo">
+    <p class="placeholder">Selecione um ano e um jogo para começar.</p>
+  </main>
+
+  <footer>
+    <p>Site educativo alinhado ao Currículo de Referência de MS e à BNCC.</p>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+
+  <div id="modal-aluno" style="position: fixed; inset: 0; background: rgba(0,0,0,.7); display: flex; align-items: center; justify-content: center; z-index: 999;">
+    <div style="background: white; border-radius: 16px; padding: 30px; max-width: 400px; width: 90%; text-align: center;">
+      <h2 style="color: #00695c; margin-bottom: 12px;">👋 Bem-vindo!</h2>
+      <p>Digite seu nome para registrar sua avaliação:</p>
+      <input id="inp-aluno" placeholder="Nome ou apelido" maxlength="30" style="width: 100%; padding: 12px; border: 2px solid #b2dfdb; border-radius: 8px; font-size: 1rem; margin: 12px 0;">
+      <button onclick="confirmarAluno()" style="padding: 12px 24px; background: #00695c; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 1rem;">Começar</button>
+    </div>
+  </div>
+  <div id="aluno-badge" style="display:none; position: fixed; top: 10px; right: 10px; background: white; padding: 8px 14px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.15); font-weight: 600; font-size: .9rem; color: #00695c; z-index: 50;">
+    <span id="aluno-nome"></span>
+  </div>
+
+</body>
+</html>
